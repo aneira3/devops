@@ -19,6 +19,7 @@ Este repositorio quedo preparado para el flujo que pidio el profesor:
 - `23` pruebas exitosas.
 - `82%` de cobertura total.
 - El artefacto para Elastic Beanstalk se genera desde el contenido de `blacklist-microservice/`, sin carpeta padre.
+- El pipeline queda pensado para dispararse automaticamente con nuevos commits en la rama configurada.
 
 ## Proyecto Test en CodeBuild
 
