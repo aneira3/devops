@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api
 from config import Config
 from app.models.blacklist import db
@@ -30,6 +30,20 @@ def create_app(test_config=None):
     if not app.config.get('TESTING') and not app.config.get('SKIP_DB_INIT', False):
         with app.app_context():
             db.create_all()
+
+    @app.before_request
+    def ensure_database_ready():
+        # In WSGI environments we skip DB init during import time to keep tests
+        # isolated. Create tables lazily the first time a blacklist endpoint is
+        # used in a real environment.
+        if app.config.get('TESTING') or app.config.get('DB_READY'):
+            return
+        if not request.path.startswith('/blacklists'):
+            return
+
+        with app.app_context():
+            db.create_all()
+        app.config['DB_READY'] = True
     
     @app.route('/health', methods=['GET'])
     def health_check():
