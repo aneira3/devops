@@ -122,7 +122,7 @@ En `AWS Elastic Beanstalk`:
 
 1. Crear una aplicacion
 2. Crear un `Web server environment`
-3. Plataforma: `Docker`
+3. Plataforma: `Python 3.11`
 4. En `Application code`, subir manualmente el archivo `blacklist-microservice-eb.zip`
 5. Crear el environment
 
@@ -137,6 +137,15 @@ Pruebas sugeridas:
 - `POST /token`
 - `POST /blacklists`
 - `GET /blacklists/<email>`
+
+## 9.1 Variables de entorno recomendadas en Beanstalk
+
+En `Configuration -> Updates, monitoring, and logging -> Environment properties` configura al menos:
+
+- `DATABASE_URL`
+- `JWT_SECRET_KEY`
+
+Si usas una base PostgreSQL en AWS, `DATABASE_URL` debe apuntar a esa instancia.
 
 ## 10. Ejecutar pipeline fallido
 

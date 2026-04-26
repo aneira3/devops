@@ -15,10 +15,10 @@ phases:
       - mkdir -p "$ARTIFACT_DIR"
   build:
     commands:
-      - echo "Generating Elastic Beanstalk source bundle"
+      - echo "Generating Elastic Beanstalk Python source bundle"
       - cd "$SERVICE_DIR"
       - find . -type d -name '__pycache__' -prune -exec rm -rf {} +
-      - zip -r "$CODEBUILD_SRC_DIR/$ARTIFACT_DIR/$ARTIFACT_NAME" . -x 'tests/*' '.pytest_cache/*' '.coverage' '.coverage.*' '*.pyc' 'htmlcov/*'
+      - zip -r "$CODEBUILD_SRC_DIR/$ARTIFACT_DIR/$ARTIFACT_NAME" . -x 'tests/*' '.pytest_cache/*' '.coverage' '.coverage.*' '*.pyc' 'htmlcov/*' 'docker-compose.yml' 'Dockerfile'
   post_build:
     commands:
       - echo "Artifact created on $(date)"

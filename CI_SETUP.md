@@ -11,6 +11,7 @@ Este repositorio quedo preparado para el flujo que pidio el profesor:
 
 - [buildspec.test.yml](/Users/aneira3/devops_proyecto_1_e1/buildspec.test.yml:1): instala dependencias y ejecuta `pytest`.
 - [buildspec.build.yml](/Users/aneira3/devops_proyecto_1_e1/buildspec.build.yml:1): genera el archivo `blacklist-microservice-eb.zip`.
+- [blacklist-microservice/Procfile](/Users/aneira3/devops_proyecto_1_e1/blacklist-microservice/Procfile:1): define el arranque WSGI para Elastic Beanstalk Python.
 - [blacklist-microservice/application.py](/Users/aneira3/devops_proyecto_1_e1/blacklist-microservice/application.py:9): ajustado para que los tests usen SQLite temporal sin tocar PostgreSQL.
 
 ## Estado actual validado
@@ -85,7 +86,7 @@ Flujo recomendado:
 
 1. Crear una aplicacion en Elastic Beanstalk.
 2. Crear un environment tipo `Web server environment`.
-3. Elegir plataforma `Docker`.
+3. Elegir plataforma `Python 3.11`.
 4. Tomar el archivo `blacklist-microservice-eb.zip` generado por la etapa `Build`.
 5. Subirlo manualmente como nueva version de la aplicacion.
 6. Desplegar esa version en el environment.
@@ -94,9 +95,8 @@ Flujo recomendado:
 
 El ZIP generado deja en la raiz del bundle los archivos que Elastic Beanstalk necesita:
 
-- `Dockerfile`
-- `docker-compose.yml`
 - `application.py`
+- `Procfile`
 - `requirements.txt`
 - `app/`
 - `.ebextensions/`
@@ -106,6 +106,8 @@ No incluye:
 - `tests/`
 - cache de pytest
 - archivos de cobertura
+- `Dockerfile`
+- `docker-compose.yml`
 
 ## Evidencias para el documento
 
