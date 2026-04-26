@@ -1,0 +1,25 @@
+version: 0.2
+
+env:
+  variables:
+    SERVICE_DIR: "blacklist-microservice"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Installing test dependencies"
+      - cd "$SERVICE_DIR"
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+  build:
+    commands:
+      - echo "Running unit tests"
+      - pytest --cov=app --cov-report=term-missing -q
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: blacklist-microservice
+  discard-paths: no

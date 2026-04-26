@@ -1,0 +1,30 @@
+version: 0.2
+
+env:
+  variables:
+    SERVICE_DIR: "blacklist-microservice"
+    ARTIFACT_DIR: "artifacts"
+    ARTIFACT_NAME: "blacklist-microservice-eb.zip"
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Preparing build environment"
+      - mkdir -p "$ARTIFACT_DIR"
+  build:
+    commands:
+      - echo "Generating Elastic Beanstalk source bundle"
+      - cd "$SERVICE_DIR"
+      - find . -type d -name '__pycache__' -prune -exec rm -rf {} +
+      - zip -r "$CODEBUILD_SRC_DIR/$ARTIFACT_DIR/$ARTIFACT_NAME" . -x 'tests/*' '.pytest_cache/*' '.coverage' '.coverage.*' '*.pyc' 'htmlcov/*'
+  post_build:
+    commands:
+      - echo "Artifact created on $(date)"
+      - ls -lh "$CODEBUILD_SRC_DIR/$ARTIFACT_DIR"
+
+artifacts:
+  files:
+    - artifacts/*
+  discard-paths: no
