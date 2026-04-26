@@ -4,7 +4,7 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "8000:5000"
     environment:
       - DATABASE_URL=postgresql://blacklist_user:blacklist_password@db:5432/blacklist_db
       - JWT_SECRET_KEY=dev-secret-key-for-local-testing
@@ -26,7 +26,7 @@ services:
       - POSTGRES_USER=blacklist_user
       - POSTGRES_PASSWORD=blacklist_password
     ports:
-      - "5432:5432"
+      - "5001:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql

@@ -8,11 +8,10 @@ from app.resources.blacklist_resource import BlacklistResource, BlacklistCheckRe
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    
+
+    app.config.from_object(Config)
     if test_config:
         app.config.update(test_config)
-    else:
-        app.config.from_object(Config)
     
     # Initialize extensions
     db.init_app(app)
@@ -26,8 +25,9 @@ def create_app(test_config=None):
     api.add_resource(BlacklistResource, '/blacklists')
     api.add_resource(BlacklistCheckResource, '/blacklists/<string:email>')
     
-    # Create database tables only if not testing
-    if not app.config.get('TESTING'):
+    # Avoid opening a production DB connection as a side effect of importing
+    # the module; tests inject their own database configuration explicitly.
+    if not app.config.get('TESTING') and not app.config.get('SKIP_DB_INIT', False):
         with app.app_context():
             db.create_all()
     
@@ -42,7 +42,8 @@ def create_app(test_config=None):
     
     return app
 
-application = create_app()
+application = create_app({'SKIP_DB_INIT': True})
 
 if __name__ == '__main__':
+    application = create_app()
     application.run(debug=True, host='0.0.0.0', port=5000)
