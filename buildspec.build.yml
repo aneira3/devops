@@ -40,7 +40,7 @@ phases:
       - sed -e "s|__CONTAINER_NAME__|$ECS_CONTAINER_NAME|g" -e "s|__CONTAINER_PORT__|$ECS_CONTAINER_PORT|g" deployment/appspec.yaml > "$DEPLOYMENT_DIR/appspec.yaml"
   post_build:
     commands:
-      - echo "Container image pushed: $IMAGE_URI"
+      - 'echo "Container image pushed: $IMAGE_URI"'
       - ls -lh "$DEPLOYMENT_DIR"
       - cat "$DEPLOYMENT_DIR/taskdef.json"
 
