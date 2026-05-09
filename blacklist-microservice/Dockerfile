@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
@@ -25,11 +25,11 @@ RUN useradd --create-home --shell /bin/bash app \
 USER app
 
 # Expose port
-EXPOSE 8000
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run the application
-CMD ["python", "application.py"]
+# Run the application with a production WSGI server
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "application:application"]
