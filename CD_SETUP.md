@@ -6,7 +6,7 @@ Este repositorio queda preparado para una pipeline con estos componentes:
 - `CodeBuild` para pruebas unitarias
 - `CodeBuild` para construccion y publicacion de imagen en `Amazon ECR`
 - `CodePipeline` para orquestar CI/CD
-- `CodeDeploy` para desplegar sobre `Amazon ECS` con `AWS Fargate`
+- `Amazon ECS` para desplegar sobre `AWS Fargate`
 
 ## Flujo objetivo
 
@@ -18,17 +18,14 @@ Este repositorio queda preparado para una pipeline con estos componentes:
    - `CodeBuild` ejecuta `buildspec.build.yml`.
    - construye la imagen Docker
    - la publica en `Amazon ECR`
-   - genera `deployment/taskdef.json`
-   - genera `deployment/appspec.yaml`
+   - genera `imagedefinitions.json`
 4. `Deploy`
-   - `CodeDeploy` toma esos artefactos y actualiza el servicio ECS en Fargate.
+   - `CodePipeline` usa el provider `Amazon ECS` para actualizar el servicio ECS en Fargate.
 
 ## Archivos clave
 
 - [buildspec.test.yml](/Users/aneira3/devops_proyecto_1_e1/buildspec.test.yml:1)
 - [buildspec.build.yml](/Users/aneira3/devops_proyecto_1_e1/buildspec.build.yml:1)
-- [deployment/appspec.yaml](/Users/aneira3/devops_proyecto_1_e1/deployment/appspec.yaml:1)
-- [deployment/taskdef.template.json](/Users/aneira3/devops_proyecto_1_e1/deployment/taskdef.template.json:1)
 - [blacklist-microservice/Dockerfile](/Users/aneira3/devops_proyecto_1_e1/blacklist-microservice/Dockerfile:1)
 
 ## Infraestructura ya identificada en AWS
@@ -37,9 +34,7 @@ Este repositorio queda preparado para una pipeline con estos componentes:
 - ECR repo: `772829097543.dkr.ecr.us-east-2.amazonaws.com/blacklist_microservice`
 - ECS cluster: `black_list_cluster`
 - ECS service: `Task-blacklist-service-9zso9ucm`
-- ECS task family: `Task-blacklist`
 - ECS container name: `blacklist-microservice`
-- CloudWatch Logs group: `/ecs/Task-blacklist`
 
 ## Variables de entorno para el proyecto Build en CodeBuild
 
@@ -48,22 +43,11 @@ Configura estas variables en el proyecto que ejecuta `buildspec.build.yml`:
 - `AWS_ACCOUNT_ID`
 - `AWS_DEFAULT_REGION`
 - `IMAGE_REPO_NAME`
-- `ECS_EXECUTION_ROLE_ARN`
-- `ECS_TASK_ROLE_ARN`
-- `ECS_TASK_FAMILY`
 - `ECS_CONTAINER_NAME`
-- `ECS_CONTAINER_PORT`
-- `ECS_TASK_CPU`
-- `ECS_TASK_MEMORY`
-- `DATABASE_URL`
-- `JWT_SECRET_KEY`
-- `ECS_LOG_GROUP`
 
 Valores tipicos:
 
-- `ECS_CONTAINER_PORT=5000`
-- `ECS_TASK_CPU=1024`
-- `ECS_TASK_MEMORY=3072`
+- `ECS_CONTAINER_NAME=blacklist-microservice`
 
 ## Infraestructura manual previa en AWS
 
@@ -75,8 +59,7 @@ Antes del pipeline automatizado hay que tener funcionando manualmente:
 4. Un servicio `ECS Fargate`
 5. Un `Application Load Balancer`
 6. Una target group
-7. Una deployment application y deployment group en `CodeDeploy`
-8. Una base PostgreSQL accesible por la tarea
+7. Una base PostgreSQL accesible por la tarea
 
 ## Despliegue manual inicial en Fargate
 
@@ -96,7 +79,7 @@ Pasos sugeridos:
 
 ## Pipeline recomendado
 
-`GitHub -> CodeBuild(Test) -> CodeBuild(Build) -> CodeDeploy(ECS/Fargate)`
+`GitHub -> CodeBuild(Test) -> CodeBuild(Build) -> ECS Deploy(Fargate)`
 
 ## Evidencias que hay que producir
 
@@ -110,7 +93,6 @@ Este repositorio ya no empaqueta un ZIP para Elastic Beanstalk en la etapa `Buil
 Ahora la salida del build es:
 
 - una imagen publicada en `Amazon ECR`
-- un `taskdef.json`
-- un `appspec.yaml`
+- un `imagedefinitions.json`
 
-Eso es lo que `CodeDeploy` necesita para ECS/Fargate.
+Eso es lo que el stage `Amazon ECS` de CodePipeline necesita para actualizar el servicio en Fargate.

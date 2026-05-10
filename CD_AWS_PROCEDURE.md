@@ -7,7 +7,6 @@ Esta guia usa la infraestructura real que ya tienen:
 - ECR repo: `blacklist_microservice`
 - ECS cluster: `black_list_cluster`
 - ECS service: `Task-blacklist-service-9zso9ucm`
-- ECS task family: `Task-blacklist`
 
 ## 1. Confirmar infraestructura manual
 
@@ -45,44 +44,15 @@ Variables de entorno del proyecto:
 - `AWS_ACCOUNT_ID=772829097543`
 - `AWS_DEFAULT_REGION=us-east-2`
 - `IMAGE_REPO_NAME=blacklist_microservice`
-- `ECS_TASK_FAMILY=Task-blacklist`
 - `ECS_CONTAINER_NAME=blacklist-microservice`
-- `ECS_CONTAINER_PORT=5000`
-- `ECS_TASK_CPU=1024`
-- `ECS_TASK_MEMORY=3072`
-- `ECS_EXECUTION_ROLE_ARN=arn:aws:iam::772829097543:role/ecsTaskExecutionRole`
-- `ECS_TASK_ROLE_ARN=arn:aws:iam::772829097543:role/ecsTaskExecutionRole`
-- `DATABASE_URL=postgresql://postgres:devops999@blacklist-db.cbq6oao6sg9d.us-east-2.rds.amazonaws.com:5432/postgres?sslmode=require`
-- `JWT_SECRET_KEY=blacklist-jwt-secret-2026`
-- `ECS_LOG_GROUP=/ecs/Task-blacklist`
 
 Permisos importantes del role de CodeBuild:
 
 - push a `Amazon ECR`
-- `ecs:RegisterTaskDefinition`
 - leer artefactos del pipeline
 - escribir logs
 
-## 4. Configurar CodeDeploy para ECS
-
-Si ya existe, solo valida:
-
-1. Una `CodeDeploy Application` tipo `ECS`
-2. Un `Deployment Group` apuntando a:
-   - cluster `black_list_cluster`
-   - service `Task-blacklist-service-9zso9ucm`
-3. El deployment group debe conocer:
-   - listener del ALB
-   - target group activo
-   - target group de reemplazo si usan blue/green
-
-Si no existe, créalo así:
-
-- Compute platform: `Amazon ECS`
-- ECS cluster: `black_list_cluster`
-- ECS service: `Task-blacklist-service-9zso9ucm`
-
-## 5. Configurar CodePipeline
+## 4. Configurar CodePipeline
 
 Crear pipeline con estos stages:
 
@@ -99,23 +69,23 @@ Crear pipeline con estos stages:
    - Project: `blacklist-build`
 
 4. `Deploy`
-   - Provider: `CodeDeploy`
-   - Application: la de ECS
-   - Deployment group: el asociado a `black_list_cluster` y `Task-blacklist-service-9zso9ucm`
+   - Provider: `Amazon ECS`
+   - Cluster: `black_list_cluster`
+   - Service: `Task-blacklist-service-9zso9ucm`
+   - Input artifact: el output de `Build`
+   - File name: `imagedefinitions.json`
 
-## 6. Que produce el stage Build
+## 5. Que produce el stage Build
 
 El build hace tres cosas:
 
 1. Construye la imagen Docker del microservicio
 2. La publica en `772829097543.dkr.ecr.us-east-2.amazonaws.com/blacklist_microservice`
-3. Genera:
-   - `deployment/taskdef.json`
-   - `deployment/appspec.yaml`
+3. Genera `imagedefinitions.json`
 
-Esos dos archivos son los que consume `CodeDeploy`.
+Ese archivo es el que consume el stage `Amazon ECS` de CodePipeline.
 
-## 7. Escenarios de evidencia
+## 6. Escenarios de evidencia
 
 ### CI fallido
 
@@ -144,13 +114,13 @@ Hacer que `Test` y `Build` pasen, pero forzar error de despliegue.
 
 Opciones controladas:
 
-- poner un `containerPort` incorrecto temporalmente
-- usar un nombre de contenedor incorrecto temporalmente
-- alterar el deployment group o target group
+- usar un nombre de contenedor incorrecto temporalmente en `ECS_CONTAINER_NAME`
+- apuntar el stage `Deploy` a un servicio equivocado temporalmente
+- alterar el nombre del archivo `imagedefinitions.json`
 
-Luego tomar capturas del fallo de `CodeDeploy`.
+Luego tomar capturas del fallo del stage `Amazon ECS`.
 
-## 8. Nota importante
+## 7. Nota importante
 
 Para que el proyecto `Build` funcione:
 
