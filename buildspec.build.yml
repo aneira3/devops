@@ -23,28 +23,43 @@ phases:
       - test -n "$DATABASE_URL"
       - test -n "$JWT_SECRET_KEY"
       - test -n "$ECS_LOG_GROUP"
-  build:
-    commands:
+  pre_build:
       - echo "Logging in to Amazon ECR"
       - ECR_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
       - IMAGE_TAG="${CODEBUILD_RESOLVED_SOURCE_VERSION:=latest}"
       - IMAGE_URI="$ECR_REGISTRY/$IMAGE_REPO_NAME:$IMAGE_TAG"
       - TASK_ROLE_ARN="${ECS_TASK_ROLE_ARN:-$ECS_EXECUTION_ROLE_ARN}"
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+  build:
+    commands:
       - echo "Building container image $IMAGE_URI"
-      - docker build -t "$IMAGE_URI" "$SERVICE_DIR"
-      - docker push "$IMAGE_URI"
+      - docker build -t "$IMAGE_REPO_NAME" .
+      - docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI"
       - echo "Rendering ECS deployment artifacts"
       - mkdir -p "$DEPLOYMENT_DIR"
       - sed -e "s|__TASK_FAMILY__|$ECS_TASK_FAMILY|g" -e "s|__EXECUTION_ROLE_ARN__|$ECS_EXECUTION_ROLE_ARN|g" -e "s|__TASK_ROLE_ARN__|$TASK_ROLE_ARN|g" -e "s|__CONTAINER_NAME__|$ECS_CONTAINER_NAME|g" -e "s|__IMAGE_URI__|$IMAGE_URI|g" -e "s|__CONTAINER_PORT__|$ECS_CONTAINER_PORT|g" -e "s|__TASK_CPU__|$ECS_TASK_CPU|g" -e "s|__TASK_MEMORY__|$ECS_TASK_MEMORY|g" -e "s|__DATABASE_URL__|$DATABASE_URL|g" -e "s|__JWT_SECRET_KEY__|$JWT_SECRET_KEY|g" -e "s|__LOG_GROUP__|$ECS_LOG_GROUP|g" -e "s|__AWS_REGION__|$AWS_DEFAULT_REGION|g" deployment/taskdef.template.json > "$DEPLOYMENT_DIR/taskdef.json"
-      - sed -e "s|__CONTAINER_NAME__|$ECS_CONTAINER_NAME|g" -e "s|__CONTAINER_PORT__|$ECS_CONTAINER_PORT|g" deployment/appspec.yaml > "$DEPLOYMENT_DIR/appspec.yaml"
+      - sed -e "s|__CONTAINER_NAME__|$ECS_CONTAINER_NAME|g" -e "s|__CONTAINER_PORT__|$ECS_CONTAINER_PORT|g" deployment/appspec.json > "$DEPLOYMENT_DIR/appspec.json"
   post_build:
     commands:
       - 'echo "Container image pushed: $IMAGE_URI"'
-      - ls -lh "$DEPLOYMENT_DIR"
-      - cat "$DEPLOYMENT_DIR/taskdef.json"
+      - docker push "$IMAGE_URI"
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$ECS_CONTAINER_NAME" "$IMAGE_URI" > imagedefinitions.json
+      - printf '{"ImageURI":"%s"}' "$IMAGE_URI" > imageDetail.json
+      - cat imagedefinitions.json
 
 artifacts:
   files:
-    - deployment/*
-  discard-paths: no
+    - imagedefinitions.json
+    - imageDetail.json
+    - deployment/appspec.json
+    - deployment/taskdef.json
+  secondary-artifacts:
+    DefinitionArtifact:
+      files:
+        - deployment/appspec.json
+        - deployment/taskdef.json
+      discard-paths: yes # ELIMINA la carpeta 'deployment/' dentro del artefacto
+    ImageArtifact:
+      files:
+        - imageDetail.json
+      discard-paths: yes # ELIMINA la carpeta raíz dentro del artefacto, dejando solo 'imageDetail.json'
