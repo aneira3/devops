@@ -7,7 +7,7 @@ class TestHealthCheck:
         
         assert response.status_code == 200
         json_data = response.get_json()
-        assert json_data['status'] == 'healthyy'
+        assert json_data['status'] == 'healthy'
         assert json_data['service'] == 'blacklist-microservice'
     
     def test_health_check_no_auth_required(self, client):
